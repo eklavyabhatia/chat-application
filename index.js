@@ -8,10 +8,26 @@ const io = socketio(server)
 
 app.use('/', express.static('./public'))
 
+let users = {}
 
 io.on('connection', function (socket) {
-    console.log(socket.id)
+    
+    // console.log(socket.id)
     socket.emit('connected', { msg: 'Connected' })
+
+    socket.on('name', function (data) {
+        users[data.name] = socket.id
+        // console.log(users)
+    })
+
+    socket.on('send_msg', function (data) {
+        console.log(data)
+        if (data.recv_user) {
+            io.to(users[data.recv_user]).emit('recv_msg', data)
+        } else {
+            socket.broadcast.emit('recv_msg', data)
+        }
+    })
 })
 
 server.listen(1234, function (err) {
